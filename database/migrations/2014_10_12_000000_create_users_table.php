@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('sexe')->nullable();
             $table->integer('age')->nullable();
             $table->enum('role', ['client', 'prestataire','admin'])->nullable();//0=> Client, 1=> prestataire, 2=>Admin
-            $table->string('otp');
-            $table->datetime('otp_expires_at');
+            $table->string('otp')->nullable();
+            $table->datetime('otp_expires_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
