@@ -91,4 +91,42 @@ class Authcontroller extends Controller
             return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
         }
     }
+
+    // Verify email
+    public function verifyEmail(Request $request){
+        try {
+            $request->validate([
+                'email'=>"required",
+                'otp'=>"required"
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+
+            if(!$user){
+                return response()->json(['status'=>false, 'message'=>"User account not found."], 404);
+            }else if($user->email_verified_at){
+                return response()->json(['status'=>false, 'message'=>"Email already verified."], 422);
+            }
+
+            if($request->otp != $user->otp){
+                return response()->json(['status'=>false, 'message'=>"Invalid otp"], 422);
+            }
+            // check if the token is not yet expired
+            $current_date_time = Carbon::now();
+            $expire_otp_time = Carbon::parse($user->otp_expires_at);
+            if($current_date_time->greaterThan($expire_otp_time)){
+                return response()->json(['status'=>false, 'message'=>"Otp expire."], 422);
+            }
+
+            $user->email_verified_at = $current_date_time;
+            $user->save();
+
+            return response()->json([
+                'status'=>true,
+                'message'=>"Email verify successfully."
+            ]);
+        } catch (\Exception $th) {
+            return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
+        }
+    }
 }
