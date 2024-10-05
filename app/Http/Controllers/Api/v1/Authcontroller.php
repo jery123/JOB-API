@@ -129,4 +129,42 @@ class Authcontroller extends Controller
             return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
         }
     }
+
+    //resend otp
+    public function rensendOtp(Request $request){
+        try {
+            $request->validate([
+                'email'=>"required",
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+
+            if(!$user){
+                return response()->json(['status'=>false, 'message'=>"User account not found."], 404);
+            }else if($user->email_verified_at){
+                return response()->json(['status'=>false, 'message'=>"Email already verified."], 422);
+            }
+
+            // Generate a 5-digit OTP
+            $otp = strval(random_int(10000, 99999));
+
+            // Set expiration time (24 hours from now) using Carbon
+            $expiration = Carbon::now()->addHours(24);
+
+            //send the email to verify the email address
+            Mail::to($user->email)->send(new sendOtp($otp));
+
+            $user->otp = $otp;
+            $user->otp_expires_at = $expiration;
+            $user->email_verified_at = null;
+            $user->save();
+
+            return response()->json([
+                'status'=>true,
+                'message'=>"Otp send successfully."
+            ]);
+        } catch (\Exception $th) {
+            return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
+        }
+    }
 }

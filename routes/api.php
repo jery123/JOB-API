@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('register', [Authcontroller::class, 'register']);
 Route::post('login', [Authcontroller::class, 'login']);
 Route::post('verify-mail', [Authcontroller::class, 'verifyEmail']);
+Route::post('resend-otp', [Authcontroller::class, 'rensendOtp']);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
