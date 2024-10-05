@@ -21,7 +21,7 @@ class Authcontroller extends Controller
             $request->validate([
                 'name' => 'required',
                 'email' => 'required|email|unique:users',
-                'password' => 'required|min:6|confirmed',
+                'password' => 'required|min:6',
             ]);
 
             // Generate a 5-digit OTP
@@ -53,7 +53,7 @@ class Authcontroller extends Controller
         }
     }
 
-    // login 
+    // login
     public function login(Request $request)
     {
         try {
@@ -167,4 +167,114 @@ class Authcontroller extends Controller
             return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
         }
     }
+
+
+
+// Forgot Password - Generate OTP and send email
+public function forgotPassword(Request $request)
+{
+    try {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        // Find the user by email
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => "User not found."], 404);
+        }
+
+        // Generate a 5-digit OTP
+        $otp = strval(random_int(10000, 99999));
+
+        // Set expiration time (1 hour from now)
+        $expiration = Carbon::now()->addHour(1);
+
+        // Send the email with OTP for resetting password
+        Mail::to($user->email)->send(new sendOtp($otp)); // Ensure that sendOtp accepts OTP for reset
+
+        // Save OTP and expiration date in the database
+        $user->otp = $otp;
+        $user->otp_expires_at = $expiration;
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => "OTP sent to your email for password reset."
+        ]);
+    } catch (\Exception $th) {
+        return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
+    }
+}
+// Reset Password
+
+// Verify OTP
+public function verifyOtp(Request $request)
+{
+    try {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required',
+        ]);
+
+        // Find the user by email
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => "User not found."], 404);
+        }
+
+        // Check if the OTP matches
+        if ($user->otp != $request->otp) {
+            return response()->json(['status' => false, 'message' => "Invalid OTP."], 422);
+        }
+
+        // Check if OTP has expired
+        $current_date_time = Carbon::now();
+        if ($current_date_time->greaterThan($user->otp_expires_at)) {
+            return response()->json(['status' => false, 'message' => "OTP has expired."], 422);
+        }
+
+        // OTP is valid
+        return response()->json([
+            'status' => true,
+            'message' => "OTP is valid, you can now reset your password."
+        ]);
+    } catch (\Exception $th) {
+        return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
+    }
+}
+// Reset Password after OTP is validated
+public function resetPassword(Request $request)
+{
+    try {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:6|confirmed',  // Ensure the password confirmation matches
+        ]);
+
+        // Find the user by email
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => "User not found."], 404);
+        }
+
+        // Update the password only after OTP is validated
+        $user->password = bcrypt($request->password);
+        $user->otp = null; // Clear OTP after password reset
+        $user->otp_expires_at = null; // Clear OTP expiration time
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => "Password reset successfully."
+        ]);
+    } catch (\Exception $th) {
+        return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
+    }
+}
+
+
 }
