@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('sexe')->nullable();
+            $table->integer('age')->nullable();
+            $table->enum('role', ['client', 'prestataire','admin'])->nullable();//0=> Client, 1=> prestataire, 2=>Admin
+            $table->string('otp');
+            $table->datetime('otp_expires_at');
             $table->rememberToken();
             $table->timestamps();
         });
