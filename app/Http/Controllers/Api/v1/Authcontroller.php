@@ -8,6 +8,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class Authcontroller extends Controller
 {
@@ -21,8 +22,14 @@ class Authcontroller extends Controller
             $request->validate([
                 'name' => 'required',
                 'email' => 'required|email|unique:users',
-                'password' => 'required|min:6',
+                'password' => 'required|min:6|confirmed',
+                'role' => [
+                        'required', 
+                        Rule::in(['client', 'prestataire', 'admin'])
+                    ]
             ]);
+
+            
 
             // Generate a 5-digit OTP
             $otp = strval(random_int(10000, 99999));
@@ -35,6 +42,7 @@ class Authcontroller extends Controller
                     'name' => $request->name,
                     'email' => $request->email,
                     'password' => bcrypt($request->password),
+                    'role' => $request->role,
                     'otp' => $otp,
                     'otp_expires_at' => $expiration
                 ]
