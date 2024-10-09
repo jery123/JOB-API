@@ -5,10 +5,15 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Mail\V1\sendOtp;
 use App\Models\User;
+use App\Models\Client;
+use App\Models\Prestataire;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Mail\WelcomeEmail ;
+use Illuminate\Support\Facades\Hash;
+
 
 class Authcontroller extends Controller
 {
@@ -18,87 +23,104 @@ class Authcontroller extends Controller
     public function register(Request $request)
     {
         try {
-
+            // Validation des données d'entrée
             $request->validate([
-                'name' => 'required',
+                'name' => 'required|string|max:255', // Ajout de la validation pour le nom
                 'email' => 'required|email|unique:users',
-                'password' => 'required|min:6|confirmed',
-                'role' => [
-                        'required', 
-                        Rule::in(['client', 'prestataire', 'admin'])
-                    ]
+                'password' => 'required|min:6',
+                'role' => ['required', Rule::in(['client', 'prestataire', 'admin'])]
             ]);
 
-            
-
-            // Generate a 5-digit OTP
+            // Générer un OTP de 5 chiffres
             $otp = strval(random_int(10000, 99999));
 
-            // Set expiration time (24 hours from now) using Carbon
+            // Définir l'expiration de l'OTP (24 heures)
             $expiration = Carbon::now()->addHours(24);
 
-            $user = User::create(
-                [
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'password' => bcrypt($request->password),
-                    'role' => $request->role,
-                    'otp' => $otp,
-                    'otp_expires_at' => $expiration
-                ]
-            );
+            // Créer l'utilisateur dans la table `users`
+            $user = User::create([
+                'nom' => $request->name, // Ajout du nom
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'role' => $request->role,
+                'otp' => $otp,
+                'otp_expires_at' => $expiration
+            ]);
 
-            //send the email to verify the email address
+            // Inscrire l'utilisateur dans la table `clients` ou `prestataires`
+            if ($request->role == 'client') {
+                Client::create([
+                    'user_id' => $user->id,
+                ]);
+            } elseif ($request->role == 'prestataire') {
+                Prestataire::create([
+                    'user_id' => $user->id,
+                    'prix' => null,
+                    'competence' => null,
+                    'description' => null,
+                    'portfolio' => null,
+                    'age' => null,
+                    'langue' => null,
+                ]);
+            }
+
+            // Envoi de l'OTP par email pour vérification
             Mail::to($user->email)->send(new sendOtp($otp));
+
+            // Envoi de l'email de bienvenue
+            Mail::to($user->email)->send(new WelcomeEmail($user));
 
             return response()->json([
                 'status' => true,
-                'message' => "User register with success",
-                'user_date' => $user
+                'message' => "User registered successfully. Please verify your email with the OTP sent.",
+                'user_data' => $user
             ], 200);
+
         } catch (\Exception $th) {
             return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
         }
     }
 
-    // login
+
     public function login(Request $request)
     {
         try {
-
+            // Valider les données d'entrée
             $request->validate([
                 'email' => 'required',
                 'password' => 'required',
             ]);
 
+            // Récupérer l'utilisateur correspondant à l'email fourni
             $user = User::where('email', $request->email)->first();
-            // check if the the account is activated
-            if (!$user->email_verified_at) {
-                return response()->json(['status' => false, 'message' => "Your account is not activated yet."], 422);
+
+            // Vérifier si le compte utilisateur est activé
+            if (!$user || !$user->email_verified_at) {
+                return response()->json(['status' => false, 'message' => "Votre compte n'est pas encore activé."], 422);
             }
 
-            $credentials = request(['email', 'password']);
-            if (!auth()->attempt($credentials)) {
+            // Vérifier les informations d'identification (email et mot de passe)
+            if (!Hash::check($request->password, $user->password)) {
                 return response()->json([
-                    'message' => "The given data was invalid",
-                    'errors' => [
-                        'password' => [
-                            'Invalid credentials'
-                        ]
-                    ]
+                    'status' => false,
+                    'message' => 'Les informations d\'identification sont incorrectes.',
                 ], 422);
             }
-            $authToken = $user->createToken('auth-token')->plainTextToken;
+
+            // Authentifier l'utilisateur et démarrer une session
+            auth()->login($user);
 
             return response()->json([
-                'status'=>true,
-                'message'=>"Login successfully",
-                'access_token'=>$authToken
-            ]);
+                'status' => true,
+                'message' => 'Connexion réussie. La session a été démarrée.',
+                'user_data' => $user,
+            ], 200);
+
         } catch (\Exception $th) {
             return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
         }
     }
+
 
     // Verify email
     public function verifyEmail(Request $request){
