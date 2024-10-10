@@ -305,6 +305,17 @@ public function resetPassword(Request $request)
         return response()->json(['status' => false, 'error' => $th->getMessage()], 500);
     }
 }
+// logout a user method
+
+    public function logout( Request $request ) {
+        $request->user()->currentAccessToken()->delete();
+
+        $cookie = cookie()->forget( 'token' );
+
+        return response()->json( [
+            'message' => 'Logged out successfully!'
+        ] )->withCookie( $cookie );
+    }
 
 
 }
