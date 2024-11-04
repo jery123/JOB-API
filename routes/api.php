@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\v1\Authcontroller;
+use App\Http\Controllers\Api\V1\CompareImage;
 use App\Http\Controllers\Api\v1\ProfilController;
 use App\Http\Controllers\Api\v1\UserController;
 use Illuminate\Http\Request;
@@ -25,6 +26,9 @@ Route::post('/forgot-password', [Authcontroller::class, 'forgotPassword']);
 Route::post('/verify-otp', [Authcontroller::class, 'verifyOtp']);
 Route::post('/reset-password', [Authcontroller::class, 'resetPassword']);
 
+
+// Compare images
+Route::post('comp-img', [CompareImage::class, 'compare']);
 // user
 Route::prefix('user')->group(function(){
     Route::post('profile', [UserController::class, 'profile']); //to get the user profile

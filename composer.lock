@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0f28b2b53739478e11d75c45a7cd25fb",
+    "content-hash": "fde660f5bd587b9ed2b70a5a3204b9b4",
     "packages": [
         {
             "name": "brick/math",
@@ -3174,6 +3174,53 @@
                 }
             ],
             "time": "2024-04-27T21:32:50+00:00"
+        },
+        {
+            "name": "sapientpro/image-comparator",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sapientpro/image-comparator.git",
+                "reference": "dfa3be35ad91d18bc4151c19cda2d0c8c121b86f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sapientpro/image-comparator/zipball/dfa3be35ad91d18bc4151c19cda2d0c8c121b86f",
+                "reference": "dfa3be35ad91d18bc4151c19cda2d0c8c121b86f",
+                "shasum": ""
+            },
+            "require": {
+                "brick/math": "^0.12.1",
+                "ext-gd": "*",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^10.0.0|^11.0.0",
+                "squizlabs/php_codesniffer": "^3.7.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "SapientPro\\ImageComparator\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SapientPro",
+                    "email": "info@sapient.pro",
+                    "homepage": "https://sapient.pro/"
+                }
+            ],
+            "description": "Compare images using PHP",
+            "support": {
+                "issues": "https://github.com/sapientpro/image-comparator/issues",
+                "source": "https://github.com/sapientpro/image-comparator/tree/v1.1.0"
+            },
+            "time": "2024-09-20T10:44:37+00:00"
         },
         {
             "name": "symfony/console",
@@ -8125,5 +8172,5 @@
         "php": "^8.1"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
