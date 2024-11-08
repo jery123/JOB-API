@@ -27,8 +27,10 @@ Route::post('/verify-otp', [Authcontroller::class, 'verifyOtp']);
 Route::post('/reset-password', [Authcontroller::class, 'resetPassword']);
 
 
-// Compare images
+// Compare images 
 Route::post('comp-img', [CompareImage::class, 'compare']);
+Route::post('extract-img', [CompareImage::class, 'uploadAndExtractFace']);
+
 // user
 Route::prefix('user')->group(function(){
     Route::post('profile', [UserController::class, 'profile']); //to get the user profile
