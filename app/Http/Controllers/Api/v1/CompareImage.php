@@ -120,5 +120,29 @@ class CompareImage extends Controller
          return response()->json([$er->getMessage()], 500);
       }
     }
+
+    public function compareImg(Request $request){
+      try {
+         $pythonPath = '"C:\\Users\\GENERAL STORES\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe"';
+         $scriptPath = public_path('compare_faces.py');
+         $imagePath1 = public_path('uploads/id_cards/image1.jpg');
+         $imagePath2 = public_path('uploads/id_cards/image2.jpg');
+
+         // Build the command to execute the Python script
+         $command = $pythonPath . ' ' . $scriptPath . ' "' . $imagePath1 . '" "' . $imagePath2 . '"';
+         exec($command, $output, $result_code);
+
+         // Check the output for match result
+         if (!empty($output) && $output[0] == "Match") {
+            return response()->json(['status' => 'success', 'message' => 'Faces match']);
+         } else {
+            return response()->json(['status' => 'fail', 'message' => 'Faces do not match']);
+         }
+
+      } catch (\Exception $er) {
+         return response()->json([$er->getMessage()], 500);
+      }
+
+    }
     
 }
