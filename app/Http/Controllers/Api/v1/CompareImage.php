@@ -144,5 +144,41 @@ class CompareImage extends Controller
       }
 
     }
+    public function compareFaces(Request $request)
+{
+    // Validate the request
+    $request->validate([
+        'image1' => 'required|image|mimes:jpeg,png,jpg',
+        'image2' => 'required|image|mimes:jpeg,png,jpg',
+    ]);
+
+    // Store the uploaded images in the public directory
+    $folderPath = public_path('uploads/temp_faces');
+    if (!file_exists($folderPath)) {
+        mkdir($folderPath, 0777, true); // Create the directory if it doesn't exist
+    }
+
+    // Save each uploaded file
+    $image1Path = $folderPath . '/' . time() . '-image1.jpg';
+    $image2Path = $folderPath . '/' . time() . '-image2.jpg';
+    $request->file('image1')->move($folderPath, basename($image1Path));
+    $request->file('image2')->move($folderPath, basename($image2Path));
+
+    // Set the path to the Python executable and script
+    $scriptPath = public_path('compare_faces.py');
+
+    // Build the command to execute the Python script with both image paths
+    $command = "python" . ' "' . $scriptPath . '" "' . $image1Path . '" "' . $image2Path . '"';
+
+    // Execute the command
+    exec($command, $output, $result_code);
+
+    // Check the output from the Python script
+    if (!empty($output) && $output[0] == "Match") {
+        return response()->json(['status' => 'success', 'message' => 'Faces match']);
+    } else {
+        return response()->json(['status' => 'fail', 'message' => 'Faces do not match']);
+    }
+}
     
 }

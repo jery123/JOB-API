@@ -30,6 +30,7 @@ Route::post('/reset-password', [Authcontroller::class, 'resetPassword']);
 // Compare images 
 Route::post('comp-img', [CompareImage::class, 'compare']);
 Route::post('extract-img', [CompareImage::class, 'uploadAndExtractFace']);
+Route::post('compare-img', [CompareImage::class, 'compareFaces']);
 
 // user
 Route::prefix('user')->group(function(){
